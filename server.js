@@ -1,6 +1,6 @@
 // packages needed for this application
 const inquirer = require("inquirer");
-const mysql = require("mysql");
+const mysql = require("mysql2");
 
 // connecting mysql to local host
 const db = mysql.createConnection({
