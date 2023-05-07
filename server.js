@@ -1,6 +1,7 @@
 // packages needed for this application
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const { printTable } = require("console-table-printer"); //for showing the array returned by mysql query as a table in command line
 
 // connecting mysql to local host
 const db = mysql.createConnection({
@@ -55,6 +56,7 @@ function start() {
       } else if (answer.task === "Add Department") {
         addDepartment();
       } else if (answer.task === "Quit") {
+        console.log("Good Bye!");
         process.exit;
       }
     });
@@ -64,10 +66,13 @@ function start() {
 
 //view all employees
 function viewAllEmployees() {
-  const request = "SELECT * FROM employee";
-  db.query(request, (err, res) => {
+  const sql =
+    "select e.id, e.first_name, e.last_name, r.title, r.salary, d.name as department, concat(m.first_name, ' ', m.last_name) as manager from employee as e" +
+    " join role as r on e.role_id=r.id join department as d on  r.department_id=d.id left join employee as m on e.manager_id=m.id";
+  db.query(sql, (err, res) => {
     if (err) throw err;
-    console.table(res);
+    // console.table(res);
+    printTable(res);
     inquirer
       .prompt([
         {
@@ -81,6 +86,7 @@ function viewAllEmployees() {
         if (answer.choice === "Main Menu") {
           start();
         } else {
+          console.log("Good Bye!");
           process.exit;
         }
       });
@@ -106,6 +112,7 @@ function viewAllRoles() {
         if (answer.choice === "Main Menu") {
           start();
         } else {
+          console.log("Good Bye!");
           process.exit;
         }
       });
@@ -131,6 +138,7 @@ function viewAllDepartments() {
         if (answer.choice === "Main Menu") {
           start();
         } else {
+          console.log("Good Bye!");
           process.exit;
         }
       });
@@ -189,6 +197,7 @@ function addEmployee() {
             if (answer.choice === "Main Menu") {
               start();
             } else {
+              console.log("Good Bye!");
               process.exit;
             }
           });
@@ -239,6 +248,7 @@ function addRole() {
             if (answer.choice === "Main Menu") {
               start();
             } else {
+              console.log("Good Bye!");
               process.exit;
             }
           });
@@ -277,6 +287,7 @@ function addDepartment() {
             if (answer.choice === "Main Menu") {
               start();
             } else {
+              console.log("Good Bye!");
               process.exit;
             }
           });
