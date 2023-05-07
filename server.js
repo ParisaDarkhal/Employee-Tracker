@@ -3,10 +3,18 @@ const inquirer = require("inquirer");
 const mysql = require("mysql");
 
 // connecting mysql to local host
-const connection = mysql.createConnection({
+const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "root", //should hide password with env later
+  database: "employees_db",
+});
+db.connect((err) => {
+  if (err) {
+    console.log(err);
+    return;
+  }
+  console.log("Successfully Connected to Database");
 });
 
 // creating questions for user input
@@ -31,21 +39,22 @@ function start() {
       },
     ])
     .then((answer) => {
-      if (answer.choice === "View All Employees") {
+      console.log(answer);
+      if (answer.task === "View All Employees") {
         viewAllEmployees();
-      } else if (answer.choice === "View All Roles") {
+      } else if (answer.task === "View All Roles") {
         viewAllRoles();
-      } else if (answer.choice === "View All Departments") {
+      } else if (answer.task === "View All Departments") {
         viewAllDepartments();
-      } else if (answer.choice === "Add Employee") {
+      } else if (answer.task === "Add Employee") {
         addEmployee();
-      } else if (answer.choice === "Update Employee Role") {
+      } else if (answer.task === "Update Employee Role") {
         updateEmployeeRole();
-      } else if (answer.choice === "Add Role") {
+      } else if (answer.task === "Add Role") {
         addRole();
-      } else if (answer.choice === "Add Department") {
+      } else if (answer.task === "Add Department") {
         addDepartment();
-      } else if (answer.choice === "Quit") {
+      } else if (answer.task === "Quit") {
         process.exit;
       }
     });
@@ -63,7 +72,7 @@ function viewAllEmployees() {
       .prompt([
         {
           type: "list",
-          name: "next",
+          name: "choice",
           message: "Select an option:",
           choices: ["Main Menu", "Quit"],
         },
@@ -88,7 +97,7 @@ function viewAllRoles() {
       .prompt([
         {
           type: "list",
-          name: "next",
+          name: "choice",
           message: "Select an option:",
           choices: ["Main Menu", "Quit"],
         },
@@ -113,7 +122,7 @@ function viewAllDepartments() {
       .prompt([
         {
           type: "list",
-          name: "next",
+          name: "choice",
           message: "Select an option:",
           choices: ["Main Menu", "Quit"],
         },
@@ -171,7 +180,7 @@ function addEmployee() {
           .prompt([
             {
               type: "list",
-              name: "next",
+              name: "choice",
               message: "Select an option:",
               choices: ["Main Menu", "Quit"],
             },
@@ -221,7 +230,7 @@ function addRole() {
           .prompt([
             {
               type: "list",
-              name: "next",
+              name: "choice",
               message: "Select an option:",
               choices: ["Main Menu", "Quit"],
             },
@@ -259,7 +268,7 @@ function addDepartment() {
           .prompt([
             {
               type: "list",
-              name: "next",
+              name: "choice",
               message: "Select an option:",
               choices: ["Main Menu", "Quit"],
             },
@@ -277,3 +286,6 @@ function addDepartment() {
 
 // update employee role
 function updateEmployeeRole() {}
+
+// call start to begin
+start();
