@@ -71,7 +71,7 @@ function viewAllEmployees() {
     " join role as r on e.role_id=r.id join department as d on  r.department_id=d.id left join employee as m on e.manager_id=m.id";
   db.query(sql, (err, res) => {
     if (err) throw err;
-    // console.table(res);
+
     printTable(res);
     inquirer
       .prompt([
@@ -95,10 +95,12 @@ function viewAllEmployees() {
 
 // view all roles
 function viewAllRoles() {
-  const request = "SELECT * FROM role";
-  db.query(request, (err, res) => {
+  const sql =
+    "select r.id, r.title, r.salary, d.name as department from role as r " +
+    "join department as d where r.department_id=d.id;";
+  db.query(sql, (err, res) => {
     if (err) throw err;
-    console.table(res);
+    printTable(res);
     inquirer
       .prompt([
         {
@@ -121,10 +123,10 @@ function viewAllRoles() {
 
 // view all departments
 function viewAllDepartments() {
-  const request = "SELECT * FROM department";
+  const request = "select department.id, department.name from department;";
   db.query(request, (err, res) => {
     if (err) throw err;
-    console.table(res);
+    printTable(res);
     inquirer
       .prompt([
         {
