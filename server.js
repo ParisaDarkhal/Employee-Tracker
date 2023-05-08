@@ -1,6 +1,6 @@
 // packages needed for this application
 const inquirer = require("inquirer");
-const mysql = require("mysql2");
+const mysql = require("mysql");
 const { printTable } = require("console-table-printer"); //for showing the array returned by mysql query as a table in command line
 
 // connecting mysql to local host
@@ -40,7 +40,6 @@ function start() {
       },
     ])
     .then((answer) => {
-      console.log(answer);
       if (answer.task === "View All Employees") {
         viewAllEmployees();
       } else if (answer.task === "View All Roles") {
@@ -123,8 +122,8 @@ function viewAllRoles() {
 
 // view all departments
 function viewAllDepartments() {
-  const request = "select department.id, department.name from department;";
-  db.query(request, (err, res) => {
+  const sql = "select department.id, department.name from department;";
+  db.query(sql, (err, res) => {
     if (err) throw err;
     printTable(res);
     inquirer
@@ -147,8 +146,52 @@ function viewAllDepartments() {
   });
 }
 
+// gets role ID for input
+async function getRoleID() {
+  let options = [];
+  await db.query("SELECT r.id, r.title FROM role AS r", (err, res) => {
+    if (err) throw err;
+
+    res.map((obj) => options.push({ name: obj.title, value: obj.id }));
+  });
+  return options;
+}
+
+// gets employee ID for input
+async function getEmployeeID() {
+  let options = [];
+  await db.query(
+    "SELECT e.id, concat(e.first_name, ' ', e.last_name) AS fullName FROM employee AS e",
+    // "SELECT e.id, concat(e.first_name, ' ', e.last_name) AS fullName FROM employee AS e",
+    (err, res) => {
+      if (err) throw err;
+
+      res.map((obj) =>
+        options.push({
+          name: obj.fullName,
+          value: obj.id,
+        })
+      );
+
+      console.log("options :>> ", options);
+      return options;
+    }
+  );
+}
+
+// gets department ID for input
+async function getDepartmentID() {
+  let options = [];
+  await db.query("SELECT d.id, d.name FROM department AS d", (err, res) => {
+    if (err) throw err;
+
+    res.map((obj) => options.push({ name: obj.name, value: obj.id }));
+  });
+  return options;
+}
+
 // add new employee
-function addEmployee() {
+async function addEmployee() {
   inquirer
     .prompt([
       {
@@ -162,53 +205,54 @@ function addEmployee() {
         message: "What is the employee's last name?",
       },
       {
-        type: "number",
-        name: "roleID",
-        message: "What is the employee's role id?",
+        type: "list",
+        name: "role",
+        message: "What is the employee's role?",
+        choices: await getRoleID(),
       },
       {
-        type: "number",
-        name: "managerID",
-        message: "Who is the employee's manager id",
+        type: "list",
+        name: "manager",
+        message: "Who is the employee's manager?",
+        choices: await getEmployeeID(),
       },
     ])
-    .then(
-      (response) =>
-        db.query(
-          "INSERT INTO employee(first-name, last-name, role_id, manager_id) VALUES (?,?,?,?)",
-          [
-            response.firstName,
-            response.lastName,
-            response.roleID,
-            response.managerID,
-          ]
-        ),
-      (err, res) => {
-        if (err) throw err;
-        console.table(res);
-        inquirer
-          .prompt([
-            {
-              type: "list",
-              name: "choice",
-              message: "Select an option:",
-              choices: ["Main Menu", "Quit"],
-            },
-          ])
-          .then((answer) => {
-            if (answer.choice === "Main Menu") {
-              start();
-            } else {
-              console.log("Good Bye!");
-              process.exit;
-            }
-          });
-      }
-    );
+    .then((response) => {
+      db.query(
+        "INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?)",
+        [
+          response.firstName,
+          response.lastName,
+          response.role,
+          response.manager,
+        ],
+        (err, res) => {
+          if (err) throw err;
+          console.log("New employee successfully added.");
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "choice",
+                message: "Select an option:",
+                choices: ["Main Menu", "Quit"],
+              },
+            ])
+            .then((answer) => {
+              if (answer.choice === "Main Menu") {
+                start();
+              } else {
+                console.log("Good Bye!");
+                process.exit;
+              }
+            });
+        }
+      );
+    });
 }
 
 // add new role
-function addRole() {
+async function addRole() {
   inquirer
     .prompt([
       {
@@ -222,39 +266,40 @@ function addRole() {
         message: "What s the salary of the new role?",
       },
       {
-        type: "number",
-        name: "departmentID",
-        message:
-          "What department does the role belong to, please enter department ID?",
+        type: "list",
+        name: "department",
+        message: "What department does the role belong to?",
+        choices: await getDepartmentID(),
       },
     ])
-    .then(
-      (response) =>
-        db.query(
-          "INSERT INTO role(title, salary, department_id) VALUES (?,?,?)",
-          [response.newRole, response.salary, response.departmentID]
-        ),
-      (err, res) => {
-        if (err) throw err;
-        console.table(res);
-        inquirer
-          .prompt([
-            {
-              type: "list",
-              name: "choice",
-              message: "Select an option:",
-              choices: ["Main Menu", "Quit"],
-            },
-          ])
-          .then((answer) => {
-            if (answer.choice === "Main Menu") {
-              start();
-            } else {
-              console.log("Good Bye!");
-              process.exit;
-            }
-          });
-      }
+    .then((response) =>
+      db.query(
+        "INSERT INTO role(title, salary, department_id) VALUES (?,?,?)",
+        [response.newRole, response.salary, response.department],
+        // ),
+        (err, res) => {
+          if (err) throw err;
+          console.log(`${response.newRole} was successfully added to role.`);
+          // console.table(res);
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "choice",
+                message: "Select an option:",
+                choices: ["Main Menu", "Quit"],
+              },
+            ])
+            .then((answer) => {
+              if (answer.choice === "Main Menu") {
+                start();
+              } else {
+                console.log("Good Bye!");
+                process.exit;
+              }
+            });
+        }
+      )
     );
 }
 
@@ -268,37 +313,84 @@ function addDepartment() {
         message: "What is the name of the department",
       },
     ])
-    .then(
-      (response) =>
-        db.query("INSERT INTO department(name) VALUES (?)", [
-          response.newDepartment,
-        ]),
-      (err, res) => {
-        if (err) throw err;
-        console.table(res);
-        inquirer
-          .prompt([
-            {
-              type: "list",
-              name: "choice",
-              message: "Select an option:",
-              choices: ["Main Menu", "Quit"],
-            },
-          ])
-          .then((answer) => {
-            if (answer.choice === "Main Menu") {
-              start();
-            } else {
-              console.log("Good Bye!");
-              process.exit;
-            }
-          });
-      }
-    );
+    .then((response) => {
+      db.query(
+        "INSERT INTO department(name) VALUES (?)",
+        [response.newDepartment],
+        (err, res) => {
+          if (err) throw err;
+          console.log(
+            `${response.newDepartment} was successfully added to department.`
+          );
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "choice",
+                message: "Select an option:",
+                choices: ["Main Menu", "Quit"],
+              },
+            ])
+            .then((answer) => {
+              if (answer.choice === "Main Menu") {
+                start();
+              } else {
+                console.log("Good Bye!");
+                process.exit;
+              }
+            });
+        }
+      );
+    });
 }
 
 // update employee role
-function updateEmployeeRole() {}
+async function updateEmployeeRole() {
+  // const allEmployees = getEmployeeID();
+  // console.log("allEmployees:", getEmployeeID());
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        name: "employee",
+        message: "Select the employee you want to update the role for:",
+        choices: await getEmployeeID(),
+      },
+      {
+        type: "list",
+        name: "role",
+        message: "Which role do you want to assign to selected employee?",
+        choices: await getRoleID(),
+      },
+    ])
+    .then((response) => {
+      db.query(
+        `UPDATE employee SET role_id=${response.role} WHERE employee.id=${response.employee}`,
+        (err, res) => {
+          if (err) throw err;
+          console.log("Employee's role is successfully updated.");
+          inquirer
+            .prompt([
+              {
+                type: "list",
+                name: "choice",
+                message: "Select an option:",
+                choices: ["Main Menu", "Quit"],
+              },
+            ])
+            .then((answer) => {
+              if (answer.choice === "Main Menu") {
+                start();
+              } else {
+                console.log("Good Bye!");
+                process.exit;
+              }
+            });
+        }
+      );
+    });
+}
 
 // call start to begin
+// getEmployeeID();
 start();

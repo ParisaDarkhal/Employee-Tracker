@@ -16,6 +16,7 @@
     "console-table-printer": "^2.11.1",
     "inquirer": "^8.2.4",
     "mysql": "^2.18.1",
-    "mysql2": "^3.3.0"
+    "mysql2": "^3.3.0",
+    "mysql2-promise": "^0.1.4"
   }
 }
