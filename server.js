@@ -10,13 +10,13 @@ const db = mysql.createConnection({
   password: "root", //should hide password with env later
   database: "employees_db",
 });
-db.connect((err) => {
-  if (err) {
-    console.log(err);
-    return;
-  }
-  console.log("Successfully Connected to Database");
-});
+// db.connect((err) => {
+//   if (err) {
+//     console.log(err);
+//     return;
+//   }
+//   console.log("Successfully Connected to Database");
+// });
 
 // creating questions for user input
 function start() {
@@ -160,23 +160,23 @@ async function getRoleID() {
 // gets employee ID for input
 async function getEmployeeID() {
   let options = [];
-  await db.query(
-    "SELECT e.id, concat(e.first_name, ' ', e.last_name) AS fullName FROM employee AS e",
-    // "SELECT e.id, concat(e.first_name, ' ', e.last_name) AS fullName FROM employee AS e",
-    (err, res) => {
-      if (err) throw err;
 
-      res.map((obj) =>
-        options.push({
-          name: obj.fullName,
-          value: obj.id,
-        })
-      );
-
-      console.log("options :>> ", options);
-      return options;
-    }
-  );
+  let finalResults = new Promise((resolve, reject) => {
+    db.query(
+      "SELECT e.id, concat(e.first_name, ' ', e.last_name) AS fullName FROM employee AS e",
+      (err, res) => {
+        if (err) reject(err);
+        res.map((obj) =>
+          options.push({
+            name: obj.fullName,
+            value: obj.id,
+          })
+        );
+        resolve(options);
+      }
+    );
+  });
+  return finalResults;
 }
 
 // gets department ID for input
@@ -280,7 +280,6 @@ async function addRole() {
         (err, res) => {
           if (err) throw err;
           console.log(`${response.newRole} was successfully added to role.`);
-          // console.table(res);
           inquirer
             .prompt([
               {
@@ -346,8 +345,6 @@ function addDepartment() {
 
 // update employee role
 async function updateEmployeeRole() {
-  // const allEmployees = getEmployeeID();
-  // console.log("allEmployees:", getEmployeeID());
   inquirer
     .prompt([
       {
@@ -392,5 +389,5 @@ async function updateEmployeeRole() {
 }
 
 // call start to begin
-// getEmployeeID();
+
 start();
