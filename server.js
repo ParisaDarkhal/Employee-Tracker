@@ -10,13 +10,6 @@ const db = mysql.createConnection({
   password: "root", //should hide password with env later
   database: "employees_db",
 });
-// db.connect((err) => {
-//   if (err) {
-//     console.log(err);
-//     return;
-//   }
-//   console.log("Successfully Connected to Database");
-// });
 
 // creating questions for user input
 function start() {
